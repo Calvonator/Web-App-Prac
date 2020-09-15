@@ -1,5 +1,7 @@
 from sqlalchemy import Column, String
 from .entity import Entity, Base
+from marshmallow import Schema, fields
+
 
 class Exam(Entity, Base):
     __tablename__ = 'exams'
@@ -11,3 +13,14 @@ class Exam(Entity, Base):
         Entity.__init__(self, created_by)
         self.title = title
         self.description = description
+
+
+class ExamSchema(Schema):
+    
+    id = fields.Number()
+    title = fields.Str()
+    description = fields.Str()
+    created_at = fields.DateTime()
+    updated_at = fields.DateTime()
+    last_updated_at = fields.Str()
+

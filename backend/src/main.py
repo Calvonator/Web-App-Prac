@@ -1,26 +1,47 @@
+from flask import Flask, jsonify, request
 from .entities.entity import Session, engine, Base
-from .entities.exam import Exam
+from .entities.exam import Exam, ExamSchema
+
+
+
+#Create the Flask application
+app = Flask(__name__)
+
 
 #Generate database Schema
 Base.metadata.create_all(engine)
 
-#Start Session
-session = Session()
+@app.route('/exams')
+def get_exams():
+    #Fetch the database
+    session = Session()
+    exam_objects = session.query(Exam).all()
 
-#Check for existing data
-exams = session.query(Exam).all()
 
-if len(exams) == 0:
-    #Create an initial dummy exam
+    #Transform into JSON-serialisable objects
+    schema = ExamSchema(many = True)
+    exams = schema.dump(exam_objects)
 
-    python_exam = Exam('SQLAlchemy Exam', 'Test your knowledge', "script")
-    session.add(python_exam)
+    #Serialise as JSON
+    session.close()
+    return exams
+
+@app.route('/exams', methods = ['POST'])
+def add_exam():
+    #Mount exam object
+    posted_exam = ExamSchema(only = ('title', 'description')).load(request.get_json())
+
+    exam = Exam(**posted_exam.data, created_by = "HTTP post request")
+
+    #Persist the exam
+    session = Session()
+    session.add(exam)
     session.commit()
+
+    #return created exam
+    new_exam = ExamSchema().dump(exam).data
     session.close()
 
-    #Reload exams
-    exams = session.query(Exam).all()
+    return jsonify(new_exam), 201
 
-print("### Exams")
-for exam in exams:
-    print(f'({exam.id}) {exam.title} - {exam.description}')
+

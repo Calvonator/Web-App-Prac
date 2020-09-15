@@ -17,7 +17,7 @@ Session = sessionmaker(bind = engine)
 
 Base = declarative_base()
 
-#Represents an entity
+#Super/parent class for entities handled with SQLAlchemy and the SQL database
 class Entity():
 
     id = Column(Integer, primary_key = True)
